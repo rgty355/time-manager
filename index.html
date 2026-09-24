@@ -19,6 +19,10 @@
       border: 1px solid rgba(255, 255, 255, 0.1);
       backdrop-filter: blur(12px);
     }
+    .drop-hover {
+      border-color: #6366f1 !important;
+      background-color: rgba(99, 102, 241, 0.15) !important;
+    }
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.2); }
     ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 9999px; }
@@ -96,9 +100,38 @@
         </div>
       </div>
 
-      <div class="app-card rounded-2xl p-5 space-y-4">
-        <h2 class="text-base font-bold text-white">📆 Emploi du Temps</h2>
-        <div id="timelineGrid" class="space-y-2 max-h-[600px] overflow-y-auto"></div>
+      <!-- Grille Planning + Drag & Drop Side Panel -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Tiroir Tâches à glisser -->
+        <div class="lg:col-span-4 space-y-4">
+          <div class="app-card rounded-2xl p-4 flex flex-col">
+            <div class="flex justify-between items-center mb-3">
+              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+                <span>✋</span> Glisser vers l'heure
+              </h3>
+              <button id="quickSwitchTasks" class="text-[11px] text-indigo-400 hover:underline">+ Créer tâche</button>
+            </div>
+            <p class="text-[11px] text-slate-400 mb-3">Glisse une tâche sur l'heure de ton choix dans la grille ➔</p>
+            <div id="draggableTasksList" class="space-y-2.5 min-h-[150px] max-h-[450px] overflow-y-auto pr-1"></div>
+          </div>
+        </div>
+
+        <!-- Timeline Grille Heure par Heure -->
+        <div class="lg:col-span-8">
+          <div class="app-card rounded-2xl p-5 space-y-4">
+            <div class="flex justify-between items-center pb-3 border-b border-white/10">
+              <div>
+                <h2 class="text-base font-bold text-white flex items-center gap-2">📆 Emploi du Temps</h2>
+                <p class="text-xs text-slate-400">Grille horaire de 06:00 à 23:00</p>
+              </div>
+              <div class="flex gap-2">
+                <button id="addFixedScheduleBtn" class="bg-white/10 hover:bg-white/20 text-xs text-sky-300 px-3 py-1.5 rounded-lg border border-white/10 transition">+ Bloquer un horaire</button>
+                <button id="clearTimelineBtn" class="text-xs text-rose-400 hover:text-rose-300 px-2 py-1.5 transition">Effacer le jour</button>
+              </div>
+            </div>
+            <div id="timelineGrid" class="space-y-2 max-h-[600px] overflow-y-auto pr-1"></div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -114,8 +147,11 @@
           <div>
             <label class="block text-xs font-semibold text-slate-400 mb-1">Durée</label>
             <select id="fullTaskDuration" class="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-xs text-white">
+              <option value="15">15 min</option>
               <option value="30">30 min</option>
+              <option value="45">45 min</option>
               <option value="60" selected>1 heure</option>
+              <option value="90">1h 30m</option>
               <option value="120">2 heures</option>
             </select>
           </div>
