@@ -42,9 +42,20 @@ function saveData() {
 }
 
 function loadData() {
-  const saved = localStorage.getItem(STORAGE_KEY);
-  if (saved) {
-    appData = { ...appData, ...JSON.parse(saved) };
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      appData = { ...appData, ...parsed };
+      
+      // Sécurité : s'assurer que pendingTasks est bien un tableau valide
+      if (!Array.isArray(appData.pendingTasks)) {
+        appData.pendingTasks = [];
+      }
+    }
+  } catch (e) {
+    console.error("Erreur de chargement LocalStorage:", e);
+    appData.pendingTasks = [];
   }
 }
 
@@ -67,13 +78,11 @@ function renderSchedule() {
   container.innerHTML = "";
   const schedule = getSchedule();
 
-  // Créer la grille horaire de 06:00 à 23:00
   for (let h = 6; h <= 23; h++) {
     const timeLabel = `${String(h).padStart(2, "0")}:00`;
     const hourMinsStart = h * 60;
     const hourMinsEnd = (h + 1) * 60;
 
-    // Trouver les événements sur ce créneau
     const eventsOnHour = schedule.filter(item => {
       const s = parseTime(item.start);
       return s >= hourMinsStart && s < hourMinsEnd;
@@ -83,7 +92,6 @@ function renderSchedule() {
     hourSlot.className = "p-2.5 rounded-xl border border-white/10 bg-black/30 hover:bg-black/50 transition flex flex-col gap-2 min-h-[50px]";
     hourSlot.dataset.timeSlot = timeLabel;
 
-    // Événements du drag over
     hourSlot.addEventListener("dragover", (e) => {
       e.preventDefault();
       hourSlot.classList.add("drop-hover");
@@ -124,11 +132,11 @@ function renderSchedule() {
 }
 
 function placeTaskInSchedule(taskId, startTimeStr) {
-  const task = appData.pendingTasks.find(t => t.id === taskId);
+  const task = appData.pendingTasks.find(t => Number(t.id) === Number(taskId));
   if (!task) return;
 
   const startMins = parseTime(startTimeStr);
-  const endMins = startMins + task.duration;
+  const endMins = startMins + (Number(task.duration) || 60);
 
   if (endMins > 24 * 60) {
     alert("Cette tâche dépasse minuit !");
@@ -143,11 +151,10 @@ function placeTaskInSchedule(taskId, startTimeStr) {
     start: startTimeStr,
     end: minutesToTime(endMins),
     type: "work",
-    priority: task.priority
+    priority: task.priority || "moyenne"
   });
 
-  // Retirer de la banque de tâches
-  appData.pendingTasks = appData.pendingTasks.filter(t => t.id !== taskId);
+  appData.pendingTasks = appData.pendingTasks.filter(t => Number(t.id) !== Number(taskId));
   saveData();
 
   renderSchedule();
@@ -156,7 +163,7 @@ function placeTaskInSchedule(taskId, startTimeStr) {
 }
 
 window.deleteScheduleItem = function(id) {
-  appData.schedules[selectedDate] = getSchedule().filter(x => x.id !== id);
+  appData.schedules[selectedDate] = getSchedule().filter(x => Number(x.id) !== Number(id));
   saveData();
   renderSchedule();
 };
@@ -171,7 +178,7 @@ function renderDraggableTasks() {
 
   container.innerHTML = "";
 
-  if (appData.pendingTasks.length === 0) {
+  if (!appData.pendingTasks || appData.pendingTasks.length === 0) {
     container.innerHTML = `<div class="text-xs text-slate-500 italic p-3 text-center">Aucune tâche en attente.</div>`;
     return;
   }
@@ -183,8 +190,8 @@ function renderDraggableTasks() {
 
     div.innerHTML = `
       <div>
-        <div class="text-xs font-bold text-white">${escapeHTML(task.title)}</div>
-        <div class="text-[10px] text-slate-400 mt-0.5">${task.duration} min • ${task.priority}</div>
+        <div class="text-xs font-bold text-white">${escapeHTML(task.title || "Tâche sans titre")}</div>
+        <div class="text-[10px] text-slate-400 mt-0.5">${task.duration || 60} min • ${escapeHTML(task.priority || "moyenne")}</div>
       </div>
       <span class="text-slate-500 text-xs">⋮⋮</span>
     `;
@@ -203,7 +210,7 @@ function renderFullTasks() {
 
   container.innerHTML = "";
 
-  if (appData.pendingTasks.length === 0) {
+  if (!appData.pendingTasks || appData.pendingTasks.length === 0) {
     container.innerHTML = `<div class="text-xs text-slate-500 italic col-span-2">Aucune tâche enregistrée.</div>`;
     return;
   }
@@ -214,14 +221,14 @@ function renderFullTasks() {
 
     div.innerHTML = `
       <div>
-        <div class="text-xs font-bold text-white">${escapeHTML(task.title)}</div>
-        <div class="text-[11px] text-slate-400 mt-1">${task.duration} min • Priorité : ${task.priority}</div>
+        <div class="text-xs font-bold text-white">${escapeHTML(task.title || "Tâche sans titre")}</div>
+        <div class="text-[11px] text-slate-400 mt-1">${task.duration || 60} min • Priorité : ${escapeHTML(task.priority || "moyenne")}</div>
       </div>
       <button class="delete-task text-xs text-rose-400 hover:text-rose-300">Supprimer</button>
     `;
 
     div.querySelector(".delete-task").addEventListener("click", () => {
-      appData.pendingTasks = appData.pendingTasks.filter(t => t.id !== task.id);
+      appData.pendingTasks = appData.pendingTasks.filter(t => Number(t.id) !== Number(task.id));
       saveData();
       renderDraggableTasks();
       renderFullTasks();
@@ -252,7 +259,7 @@ function updateStats() {
   const statPending = document.getElementById("statPending");
 
   if (statWork) statWork.textContent = `${h}h ${String(m).padStart(2, "0")}m`;
-  if (statPending) statPending.textContent = appData.pendingTasks.length;
+  if (statPending) statPending.textContent = appData.pendingTasks ? appData.pendingTasks.length : 0;
 }
 
 function showView(viewName) {
@@ -270,7 +277,6 @@ function showView(viewName) {
 document.addEventListener("DOMContentLoaded", () => {
   loadData();
 
-  // DatePicker
   const picker = document.getElementById("selectedDatePicker");
   if (picker) {
     picker.value = selectedDate;
@@ -280,7 +286,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Ajout de tâche
   document.getElementById("fullTaskForm")?.addEventListener("submit", (e) => {
     e.preventDefault();
 
@@ -293,8 +298,8 @@ document.addEventListener("DOMContentLoaded", () => {
     appData.pendingTasks.push({
       id: uid(),
       title: title.trim(),
-      duration: Number(duration),
-      priority: priority
+      duration: Number(duration) || 60,
+      priority: priority || "moyenne"
     });
 
     saveData();
@@ -305,7 +310,6 @@ document.addEventListener("DOMContentLoaded", () => {
     updateStats();
   });
 
-  // Boutons bloquer horaire & effacer
   document.getElementById("addFixedScheduleBtn")?.addEventListener("click", () => {
     const title = prompt("Titre du créneau :", "Cours");
     if (!title) return;
@@ -328,7 +332,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.getElementById("quickSwitchTasks")?.addEventListener("click", () => showView("tasks"));
 
-  // Navigation
   document.getElementById("navPlanning")?.addEventListener("click", () => showView("planning"));
   document.getElementById("navTasks")?.addEventListener("click", () => showView("tasks"));
   document.getElementById("navNotes")?.addEventListener("click", () => showView("notes"));
