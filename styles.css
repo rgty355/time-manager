@@ -1,0 +1,36 @@
+:root {
+  --app-bg: #131722;
+  --app-accent: #6366f1;
+  --app-card-bg: rgba(0, 0, 0, 0.35);
+  --app-border: rgba(255, 255, 255, 0.1);
+}
+
+body {
+  background-color: var(--app-bg);
+  transition: background-color 0.3s ease;
+}
+
+.app-card {
+  background-color: var(--app-card-bg);
+  border: 1px solid var(--app-border);
+  backdrop-filter: blur(12px);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
