@@ -45,16 +45,11 @@ function loadData() {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
-      const parsed = JSON.parse(saved);
-      appData = { ...appData, ...parsed };
-      
-      // Sécurité : s'assurer que pendingTasks est bien un tableau valide
-      if (!Array.isArray(appData.pendingTasks)) {
-        appData.pendingTasks = [];
-      }
+      appData = { ...appData, ...JSON.parse(saved) };
+      if (!Array.isArray(appData.pendingTasks)) appData.pendingTasks = [];
     }
   } catch (e) {
-    console.error("Erreur de chargement LocalStorage:", e);
+    console.error("Erreur chargement :", e);
     appData.pendingTasks = [];
   }
 }
@@ -68,7 +63,7 @@ function getSchedule(date = selectedDate) {
 }
 
 /* =========================
-   RENDU PLANNING & DROP ZONES
+   AFFICHAGE OPTIMISÉ DU PLANNING (Condensé)
    ========================= */
 
 function renderSchedule() {
@@ -76,60 +71,75 @@ function renderSchedule() {
   if (!container) return;
 
   container.innerHTML = "";
-  const schedule = getSchedule();
+  const schedule = [...getSchedule()].sort((a, b) => parseTime(a.start) - parseTime(b.start));
 
-  for (let h = 6; h <= 23; h++) {
-    const timeLabel = `${String(h).padStart(2, "0")}:00`;
-    const hourMinsStart = h * 60;
-    const hourMinsEnd = (h + 1) * 60;
+  let currentMins = 6 * 60; // Début à 06:00
+  const endDayMins = 23 * 60; // Fin à 23:00
 
-    const eventsOnHour = schedule.filter(item => {
-      const s = parseTime(item.start);
-      return s >= hourMinsStart && s < hourMinsEnd;
+  if (schedule.length === 0) {
+    container.appendChild(createFreeSlotElement("06:00", "23:00"));
+  } else {
+    schedule.forEach(item => {
+      const itemStartMins = parseTime(item.start);
+      const itemEndMins = parseTime(item.end);
+
+      // Si trou libre avant cet événement
+      if (itemStartMins > currentMins) {
+        container.appendChild(
+          createFreeSlotElement(minutesToTime(currentMins), minutesToTime(itemStartMins))
+        );
+      }
+
+      // Élément d'événement
+      const eventDiv = document.createElement("div");
+      eventDiv.className = "p-3 rounded-xl border border-indigo-500/40 bg-indigo-950/40 flex justify-between items-center text-xs shadow-sm";
+      eventDiv.innerHTML = `
+        <div>
+          <span class="font-bold text-white text-sm">${escapeHTML(item.title)}</span>
+          <span class="text-xs text-indigo-300 ml-2 font-mono">(${item.start} - ${item.end})</span>
+        </div>
+        <button onclick="deleteScheduleItem(${item.id})" class="text-rose-400 hover:text-rose-300 text-xs px-2 py-1 font-bold">✕ Supprimer</button>
+      `;
+      container.appendChild(eventDiv);
+
+      currentMins = Math.max(currentMins, itemEndMins);
     });
 
-    const hourSlot = document.createElement("div");
-    hourSlot.className = "p-2.5 rounded-xl border border-white/10 bg-black/30 hover:bg-black/50 transition flex flex-col gap-2 min-h-[50px]";
-    hourSlot.dataset.timeSlot = timeLabel;
-
-    hourSlot.addEventListener("dragover", (e) => {
-      e.preventDefault();
-      hourSlot.classList.add("drop-hover");
-    });
-
-    hourSlot.addEventListener("dragleave", () => {
-      hourSlot.classList.remove("drop-hover");
-    });
-
-    hourSlot.addEventListener("drop", (e) => {
-      e.preventDefault();
-      hourSlot.classList.remove("drop-hover");
-      const taskId = Number(e.dataTransfer.getData("text/plain"));
-      placeTaskInSchedule(taskId, timeLabel);
-    });
-
-    let innerHTML = `<div class="text-[10px] font-mono text-slate-500 font-bold">${timeLabel}</div>`;
-
-    if (eventsOnHour.length > 0) {
-      eventsOnHour.forEach(item => {
-        innerHTML += `
-          <div class="p-2 rounded-lg border border-indigo-500/40 bg-indigo-950/40 flex justify-between items-center text-xs">
-            <div>
-              <span class="font-bold text-white">${escapeHTML(item.title)}</span>
-              <span class="text-[10px] text-indigo-300 ml-2">(${item.start} - ${item.end})</span>
-            </div>
-            <button onclick="deleteScheduleItem(${item.id})" class="text-rose-400 text-xs px-1 hover:text-rose-300">✕</button>
-          </div>
-        `;
-      });
+    // Si trou libre après le dernier événement jusqu'à 23:00
+    if (currentMins < endDayMins) {
+      container.appendChild(
+        createFreeSlotElement(minutesToTime(currentMins), minutesToTime(endDayMins))
+      );
     }
-
-    hourSlot.innerHTML = innerHTML;
-    container.appendChild(hourSlot);
   }
 
   updateStats();
 }
+
+function createFreeSlotElement(startStr, endStr) {
+  const div = document.createElement("div");
+  div.className = "p-3 rounded-xl border border-dashed border-white/10 bg-black/20 text-slate-400 flex justify-between items-center text-xs";
+  div.innerHTML = `
+    <span class="font-mono text-[11px] text-slate-500">🌿 Plage libre : ${startStr} - ${endStr}</span>
+    <button onclick="quickAddInSlot('${startStr}')" class="text-indigo-400 hover:underline text-[11px] font-semibold">+ Placer une tâche ici</button>
+  `;
+  return div;
+}
+
+window.quickAddInSlot = function(startTimeStr) {
+  if (appData.pendingTasks.length === 0) {
+    alert("Aucune tâche en attente ! Crée d'abord une tâche dans la Banque de Tâches.");
+    return;
+  }
+
+  const taskOptions = appData.pendingTasks.map((t, idx) => `${idx + 1}. ${t.title} (${t.duration} min)`).join("\n");
+  const choice = prompt(`Choisis le numéro de la tâche à placer à ${startTimeStr} :\n\n${taskOptions}`);
+  
+  const index = Number(choice) - 1;
+  if (!isNaN(index) && appData.pendingTasks[index]) {
+    placeTaskInSchedule(appData.pendingTasks[index].id, startTimeStr);
+  }
+};
 
 function placeTaskInSchedule(taskId, startTimeStr) {
   const task = appData.pendingTasks.find(t => Number(t.id) === Number(taskId));
@@ -144,7 +154,6 @@ function placeTaskInSchedule(taskId, startTimeStr) {
   }
 
   const schedule = getSchedule();
-
   schedule.push({
     id: uid(),
     title: task.title,
@@ -169,7 +178,7 @@ window.deleteScheduleItem = function(id) {
 };
 
 /* =========================
-   GESTION DES TÂCHES ET DRAG
+   BANQUE DE TÂCHES (Compatible Tactile)
    ========================= */
 
 function renderDraggableTasks() {
@@ -185,24 +194,30 @@ function renderDraggableTasks() {
 
   appData.pendingTasks.forEach(task => {
     const div = document.createElement("div");
-    div.draggable = true;
-    div.className = "p-3 rounded-xl border border-white/10 bg-black/60 cursor-grab hover:border-indigo-500 transition flex justify-between items-center";
+    div.className = "p-3 rounded-xl border border-white/10 bg-black/60 hover:border-indigo-500 transition flex justify-between items-center";
 
     div.innerHTML = `
       <div>
-        <div class="text-xs font-bold text-white">${escapeHTML(task.title || "Tâche sans titre")}</div>
+        <div class="text-xs font-bold text-white">${escapeHTML(task.title || "Tâche")}</div>
         <div class="text-[10px] text-slate-400 mt-0.5">${task.duration || 60} min • ${escapeHTML(task.priority || "moyenne")}</div>
       </div>
-      <span class="text-slate-500 text-xs">⋮⋮</span>
+      <button onclick="promptAssignTime(${task.id})" class="bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-bold px-2.5 py-1.5 rounded-lg shadow transition">
+        Placer ➔
+      </button>
     `;
-
-    div.addEventListener("dragstart", (e) => {
-      e.dataTransfer.setData("text/plain", String(task.id));
-    });
 
     container.appendChild(div);
   });
 }
+
+window.promptAssignTime = function(taskId) {
+  const timeStr = prompt("À quelle heure souhaites-tu commencer cette tâche ? (ex: 14:00)", "08:00");
+  if (timeStr && /^\d{1,2}:\d{2}$/.test(timeStr)) {
+    placeTaskInSchedule(taskId, timeStr);
+  } else if (timeStr) {
+    alert("Format d'heure incorrect. Utilise HH:MM (ex: 14:30)");
+  }
+};
 
 function renderFullTasks() {
   const container = document.getElementById("fullTasksContainer");
@@ -221,7 +236,7 @@ function renderFullTasks() {
 
     div.innerHTML = `
       <div>
-        <div class="text-xs font-bold text-white">${escapeHTML(task.title || "Tâche sans titre")}</div>
+        <div class="text-xs font-bold text-white">${escapeHTML(task.title || "Tâche")}</div>
         <div class="text-[11px] text-slate-400 mt-1">${task.duration || 60} min • Priorité : ${escapeHTML(task.priority || "moyenne")}</div>
       </div>
       <button class="delete-task text-xs text-rose-400 hover:text-rose-300">Supprimer</button>
