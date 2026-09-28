@@ -35,7 +35,7 @@
           <h1 class="text-base font-bold text-white">TimeManager OS</h1>
           <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">PRO IA</span>
         </div>
-        <p class="text-[11px] text-slate-400">Agenda intelligent & Coach d'organisation</p>
+        <p class="text-[11px] text-slate-400">Espace de travail intelligent & Agenda Pro</p>
       </div>
     </div>
 
@@ -51,7 +51,7 @@
   <!-- Dashboard Principal : Layout 2/3 Gauche & 1/3 Droite -->
   <main class="flex-1 max-w-[1600px] w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-    <!-- ZONE GAUCHE (2/3) : Tâches, Notes & Widgets -->
+    <!-- ZONE GAUCHE (2/3) : Tâches, Notes & Checklists -->
     <section class="lg:col-span-8 space-y-6">
       
       <!-- Stats / Récapitulatif rapide -->
@@ -73,22 +73,22 @@
         <div class="app-card p-4 rounded-2xl flex items-center justify-between col-span-2 md:col-span-1">
           <div>
             <div class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Statut Pronote</div>
-            <div id="statPronote" class="text-xs font-bold text-emerald-400 mt-2">Prêt à synchroniser</div>
+            <div id="statPronote" class="text-xs font-bold text-emerald-400 mt-2">Prêt pour synchro</div>
           </div>
           <div class="text-2xl">🎓</div>
         </div>
       </div>
 
-      <!-- Banque de Tâches & Ajout -->
+      <!-- Banque de Tâches & Formulaire -->
       <div class="app-card rounded-2xl p-6 space-y-4">
         <div class="flex justify-between items-center border-b border-white/10 pb-3">
           <h2 class="text-base font-bold text-white flex items-center gap-2">🎯 Banque de Tâches & Projets</h2>
-          <span class="text-xs text-slate-400">À distribuer dans l'agenda ➔</span>
+          <span class="text-xs text-slate-400">Placer dans l'agenda à droite ➔</span>
         </div>
 
-        <form id="fullTaskForm" class="grid grid-cols-1 md:grid-cols-4 gap-3 bg-black/30 p-3.5 rounded-xl border border-white/10">
+        <form id="fullTaskForm" class="grid grid-cols-1 md:grid-cols-5 gap-3 bg-black/30 p-3.5 rounded-xl border border-white/10">
           <div class="md:col-span-2">
-            <input type="text" id="fullTaskTitle" required placeholder="Nom du devoir, révision ou projet..." class="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+            <input type="text" id="fullTaskTitle" required placeholder="Nom du devoir, projet, révision..." class="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
           </div>
           <div>
             <select id="fullTaskDuration" class="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none">
@@ -101,6 +101,13 @@
             </select>
           </div>
           <div>
+            <select id="fullTaskPriority" class="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none">
+              <option value="haute">🔥 Haute</option>
+              <option value="moyenne" selected>⚡ Moyenne</option>
+              <option value="basse">🌱 Basse</option>
+            </select>
+          </div>
+          <div>
             <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs py-2 rounded-lg transition">+ Ajouter</button>
           </div>
         </form>
@@ -108,13 +115,30 @@
         <div id="fullTasksContainer" class="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[220px] overflow-y-auto pr-1"></div>
       </div>
 
-      <!-- Bloc Notes & Notes Rapides -->
-      <div class="app-card rounded-2xl p-6 space-y-3">
-        <div class="flex justify-between items-center border-b border-white/10 pb-3">
-          <h2 class="text-base font-bold text-white flex items-center gap-2">📝 Bloc-Notes Rapide</h2>
-          <span id="noteSaveStatus" class="text-[10px] text-emerald-400 font-mono">Autosaved ✓</span>
+      <!-- Section double : Notes & Checklist Flash -->
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+        
+        <!-- Bloc Notes -->
+        <div class="md:col-span-7 app-card rounded-2xl p-6 space-y-3">
+          <div class="flex justify-between items-center border-b border-white/10 pb-3">
+            <h2 class="text-base font-bold text-white flex items-center gap-2">📝 Bloc-Notes</h2>
+            <span id="noteSaveStatus" class="text-[10px] text-emerald-400 font-mono">Autosaved ✓</span>
+          </div>
+          <textarea id="quickNotesArea" placeholder="Notes rapides, brouillon ou rappel de cours..." class="w-full h-44 bg-black/30 border border-white/10 rounded-xl p-3.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 resize-none leading-relaxed"></textarea>
         </div>
-        <textarea id="quickNotesArea" placeholder="Prends tes notes rapides, idées de révision ou rappels ici..." class="w-full h-40 bg-black/30 border border-white/10 rounded-xl p-3.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 resize-none leading-relaxed"></textarea>
+
+        <!-- Checklist Flash -->
+        <div class="md:col-span-5 app-card rounded-2xl p-6 space-y-3 flex flex-col">
+          <div class="border-b border-white/10 pb-3">
+            <h2 class="text-base font-bold text-white flex items-center gap-2">⚡ Actions Flash</h2>
+          </div>
+          <form id="quickCheckForm" class="flex gap-2">
+            <input type="text" id="quickCheckInput" placeholder="Action rapide..." class="flex-1 bg-black/50 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none">
+            <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold">+</button>
+          </form>
+          <ul id="quickChecklist" class="space-y-2 flex-1 overflow-y-auto max-h-[140px] pr-1"></ul>
+        </div>
+
       </div>
 
     </section>
@@ -144,6 +168,6 @@
 
   </main>
 
-  <script src="./app.js?v=4"></script>
+  <script src="./app.js?v=5"></script>
 </body>
 </html>
