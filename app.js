@@ -1,11 +1,12 @@
 "use strict";
 
-const STORAGE_KEY = "timemanager_data_v4";
+const STORAGE_KEY = "timemanager_data_v5";
 
 let appData = {
   pendingTasks: [],
   schedules: {},
   notes: "",
+  quickChecks: [],
   settings: {
     apiKey: "",
     bgColor: "#131722",
@@ -46,6 +47,7 @@ function loadData() {
     if (saved) {
       appData = { ...appData, ...JSON.parse(saved) };
       if (!Array.isArray(appData.pendingTasks)) appData.pendingTasks = [];
+      if (!Array.isArray(appData.quickChecks)) appData.quickChecks = [];
     }
   } catch (e) {
     console.error("Erreur chargement:", e);
@@ -71,8 +73,8 @@ function renderSchedule() {
   container.innerHTML = "";
   const schedule = [...getSchedule()].sort((a, b) => parseTime(a.start) - parseTime(b.start));
 
-  let currentMins = 6 * 60; // 06:00
-  const endDayMins = 23 * 60; // 23:00
+  let currentMins = 6 * 60;
+  const endDayMins = 23 * 60;
 
   if (schedule.length === 0) {
     container.appendChild(createFreeSlotElement("06:00", "23:00"));
@@ -81,12 +83,10 @@ function renderSchedule() {
       const itemStartMins = parseTime(item.start);
       const itemEndMins = parseTime(item.end);
 
-      // Plage libre avant le cours
       if (itemStartMins > currentMins) {
         container.appendChild(createFreeSlotElement(minutesToTime(currentMins), minutesToTime(itemStartMins)));
       }
 
-      // Carte d'événement style Google Calendar / Pronote
       const eventDiv = document.createElement("div");
       const isFixed = item.type === "fixed";
       const borderClass = isFixed ? "border-sky-500/50 bg-sky-950/30 text-sky-200" : "border-indigo-500/50 bg-indigo-950/40 text-indigo-200";
@@ -188,10 +188,12 @@ function renderFullTasks() {
     const div = document.createElement("div");
     div.className = "p-3 rounded-xl border border-white/10 bg-black/40 flex justify-between items-center text-xs";
 
+    const prioColor = task.priority === "haute" ? "text-rose-400" : task.priority === "basse" ? "text-emerald-400" : "text-amber-400";
+
     div.innerHTML = `
       <div>
         <div class="font-bold text-white">${escapeHTML(task.title)}</div>
-        <div class="text-[10px] text-slate-400 mt-0.5">${task.duration} min</div>
+        <div class="text-[10px] text-slate-400 mt-0.5">${task.duration} min • <span class="${prioColor}">${task.priority || "moyenne"}</span></div>
       </div>
       <div class="flex items-center gap-2">
         <button onclick="promptAssignTime(${task.id})" class="bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-bold px-2 py-1 rounded-lg transition">Placer ➔</button>
@@ -215,6 +217,50 @@ window.deleteTask = function(taskId) {
   saveData();
   renderFullTasks();
   updateStats();
+};
+
+/* =========================
+   CHECKLIST FLASH
+   ========================= */
+
+function renderQuickChecklist() {
+  const container = document.getElementById("quickChecklist");
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  if (appData.quickChecks.length === 0) {
+    container.innerHTML = `<li class="text-xs text-slate-500 italic">Aucune action flash.</li>`;
+    return;
+  }
+
+  appData.quickChecks.forEach(item => {
+    const li = document.createElement("li");
+    li.className = "flex items-center justify-between gap-2 bg-black/30 border border-white/10 rounded-lg p-2 text-xs";
+    li.innerHTML = `
+      <div class="flex items-center gap-2 min-w-0">
+        <input type="checkbox" ${item.done ? "checked" : ""} onchange="toggleCheck(${item.id})" class="accent-indigo-500">
+        <span class="${item.done ? "line-through text-slate-500" : "text-slate-200"} truncate">${escapeHTML(item.text)}</span>
+      </div>
+      <button onclick="deleteCheck(${item.id})" class="text-rose-400 text-xs">✕</button>
+    `;
+    container.appendChild(li);
+  });
+}
+
+window.toggleCheck = function(id) {
+  const item = appData.quickChecks.find(x => x.id === id);
+  if (item) {
+    item.done = !item.done;
+    saveData();
+    renderQuickChecklist();
+  }
+};
+
+window.deleteCheck = function(id) {
+  appData.quickChecks = appData.quickChecks.filter(x => x.id !== id);
+  saveData();
+  renderQuickChecklist();
 };
 
 /* =========================
@@ -288,13 +334,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const title = document.getElementById("fullTaskTitle")?.value;
     const duration = document.getElementById("fullTaskDuration")?.value;
+    const priority = document.getElementById("fullTaskPriority")?.value;
 
     if (!title?.trim()) return;
 
     appData.pendingTasks.push({
       id: uid(),
       title: title.trim(),
-      duration: Number(duration) || 60
+      duration: Number(duration) || 60,
+      priority: priority || "moyenne"
     });
 
     saveData();
@@ -302,6 +350,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
     renderFullTasks();
     updateStats();
+  });
+
+  document.getElementById("quickCheckForm")?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const input = document.getElementById("quickCheckInput");
+    if (!input || !input.value.trim()) return;
+
+    appData.quickChecks.push({ id: uid(), text: input.value.trim(), done: false });
+    saveData();
+    input.value = "";
+    renderQuickChecklist();
   });
 
   document.getElementById("addFixedScheduleBtn")?.addEventListener("click", () => {
@@ -327,4 +386,5 @@ document.addEventListener("DOMContentLoaded", () => {
   setupNotes();
   renderSchedule();
   renderFullTasks();
+  renderQuickChecklist();
 });
