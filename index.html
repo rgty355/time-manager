@@ -26,120 +26,72 @@
 </head>
 <body id="appBody" class="text-slate-100 min-h-screen flex flex-col font-sans antialiased">
 
-  <!-- Header / Navbar -->
+  <!-- Header Top Bar -->
   <header class="border-b border-white/10 bg-black/50 backdrop-blur-xl sticky top-0 z-50 px-4 md:px-8 py-3 flex items-center justify-between">
     <div class="flex items-center gap-3">
       <div class="h-10 w-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-black text-xl shadow-lg">⚡</div>
       <div>
         <div class="flex items-center gap-2">
-          <h1 class="text-base font-bold text-white">TimeManager</h1>
-          <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">PRO OS</span>
+          <h1 class="text-base font-bold text-white">TimeManager OS</h1>
+          <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">PRO IA</span>
         </div>
-        <p class="text-[11px] text-slate-400">Espace de travail intelligent</p>
+        <p class="text-[11px] text-slate-400">Agenda intelligent & Coach d'organisation</p>
       </div>
     </div>
 
-    <!-- Navigation Bureau -->
-    <nav class="hidden md:flex bg-black/40 border border-white/10 p-1 rounded-xl gap-1 text-xs font-medium">
-      <button id="navPlanning" class="px-4 py-2 rounded-lg text-white bg-indigo-600 shadow-md">📅 Planning</button>
-      <button id="navTasks" class="px-4 py-2 rounded-lg text-slate-400 hover:text-white">🎯 Tâches</button>
-      <button id="navNotes" class="px-4 py-2 rounded-lg text-slate-400 hover:text-white">📝 Bloc-Notes</button>
-      <button id="navSettings" class="px-4 py-2 rounded-lg text-slate-400 hover:text-white">⚙️ Style & Synchro</button>
-    </nav>
-
-    <button id="quickOptimizeBtn" class="bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs px-4 py-2 rounded-xl shadow-lg flex items-center gap-2">
-      <span class="animate-pulse">✨</span>
-      <span>Optimiser (IA)</span>
-    </button>
+    <div class="flex items-center gap-3">
+      <input type="date" id="selectedDatePicker" class="bg-black/50 border border-white/10 text-xs text-white rounded-xl px-3 py-2 focus:outline-none focus:border-indigo-500">
+      <button id="quickOptimizeBtn" class="bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs px-4 py-2 rounded-xl shadow-lg flex items-center gap-2 transition">
+        <span class="animate-pulse">✨</span>
+        <span class="hidden md:inline">Optimiser (IA)</span>
+      </button>
+    </div>
   </header>
 
-  <!-- Navigation Mobile -->
-  <div class="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-black/90 border-t border-white/10 backdrop-blur-lg flex justify-around p-2 text-[10px]">
-    <button id="mobNavPlanning" class="flex flex-col items-center py-1 text-indigo-400"><span>📅</span> Planning</button>
-    <button id="mobNavTasks" class="flex flex-col items-center py-1 text-slate-400"><span>🎯</span> Tâches</button>
-    <button id="mobNavNotes" class="flex flex-col items-center py-1 text-slate-400"><span>📝</span> Notes</button>
-    <button id="mobNavSettings" class="flex flex-col items-center py-1 text-slate-400"><span>⚙️</span> Options</button>
-  </div>
+  <!-- Dashboard Principal : Layout 2/3 Gauche & 1/3 Droite -->
+  <main class="flex-1 max-w-[1600px] w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-  <!-- Contenu principal -->
-  <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 pb-20 md:pb-6">
-
-    <!-- VOLET 1 : PLANNING -->
-    <section id="viewPlanning" class="space-y-6">
-      <div class="app-card p-4 rounded-2xl flex flex-wrap justify-between items-center gap-4">
-        <div>
-          <span class="text-xs text-slate-400 font-medium">Jour affiché :</span>
-          <div class="text-base font-bold text-white flex items-center gap-2">
-            <span id="dayLabel">Aujourd'hui</span>
-          </div>
-        </div>
-        <div class="flex items-center gap-2">
-          <input type="date" id="selectedDatePicker" class="bg-black/40 border border-white/10 text-xs text-white rounded-lg px-3 py-1.5 focus:outline-none">
-        </div>
-      </div>
-
-      <!-- Stats -->
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div class="app-card p-3.5 rounded-2xl flex items-center justify-between">
+    <!-- ZONE GAUCHE (2/3) : Tâches, Notes & Widgets -->
+    <section class="lg:col-span-8 space-y-6">
+      
+      <!-- Stats / Récapitulatif rapide -->
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+        <div class="app-card p-4 rounded-2xl flex items-center justify-between">
           <div>
-            <div class="text-[10px] text-slate-400 uppercase font-bold">Travail</div>
-            <div id="statWork" class="text-lg font-bold text-indigo-400">0h 00m</div>
+            <div class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Temps Planifié</div>
+            <div id="statWork" class="text-xl font-black text-indigo-400 mt-1">0h 00m</div>
           </div>
           <div class="text-2xl">💼</div>
         </div>
-        <div class="app-card p-3.5 rounded-2xl flex items-center justify-between">
+        <div class="app-card p-4 rounded-2xl flex items-center justify-between">
           <div>
-            <div class="text-[10px] text-slate-400 uppercase font-bold">En attente</div>
-            <div id="statPending" class="text-lg font-bold text-amber-400">0</div>
+            <div class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Tâches en Attente</div>
+            <div id="statPending" class="text-xl font-black text-amber-400 mt-1">0</div>
           </div>
           <div class="text-2xl">⏳</div>
         </div>
-      </div>
-
-      <!-- Grille Planning + Tiroir Tâches -->
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <div class="lg:col-span-4 space-y-4">
-          <div class="app-card rounded-2xl p-4 flex flex-col">
-            <div class="flex justify-between items-center mb-3">
-              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
-                <span>✋</span> GLISSER VERS L'HEURE
-              </h3>
-              <button id="quickSwitchTasks" class="text-[11px] text-indigo-400 hover:underline">+ Créer tâche</button>
-            </div>
-            <div id="draggableTasksList" class="space-y-2.5 min-h-[150px] max-h-[450px] overflow-y-auto pr-1"></div>
+        <div class="app-card p-4 rounded-2xl flex items-center justify-between col-span-2 md:col-span-1">
+          <div>
+            <div class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Statut Pronote</div>
+            <div id="statPronote" class="text-xs font-bold text-emerald-400 mt-2">Prêt à synchroniser</div>
           </div>
-        </div>
-
-        <div class="lg:col-span-8">
-          <div class="app-card rounded-2xl p-5 space-y-4">
-            <div class="flex justify-between items-center pb-3 border-b border-white/10">
-              <div>
-                <h2 class="text-base font-bold text-white flex items-center gap-2">📆 Emploi du Temps</h2>
-                <p class="text-xs text-slate-400">Plage affichée : 06:00 - 23:00</p>
-              </div>
-              <div class="flex gap-2">
-                <button id="addFixedScheduleBtn" class="bg-white/10 hover:bg-white/20 text-xs text-sky-300 px-3 py-1.5 rounded-lg border border-white/10 transition">+ Bloquer un horaire</button>
-                <button id="clearTimelineBtn" class="text-xs text-rose-400 hover:text-rose-300 px-2 py-1.5 transition">Effacer le jour</button>
-              </div>
-            </div>
-            <div id="timelineGrid" class="space-y-2 max-h-[600px] overflow-y-auto pr-1"></div>
-          </div>
+          <div class="text-2xl">🎓</div>
         </div>
       </div>
-    </section>
 
-    <!-- VOLET 2 : BANQUE TÂCHES -->
-    <section id="viewTasks" class="hidden space-y-6">
-      <div class="app-card rounded-2xl p-6">
-        <h2 class="text-lg font-bold text-white mb-1">🎯 Banque de Tâches</h2>
-        <form id="fullTaskForm" class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8 bg-black/40 p-4 rounded-xl border border-white/10">
+      <!-- Banque de Tâches & Ajout -->
+      <div class="app-card rounded-2xl p-6 space-y-4">
+        <div class="flex justify-between items-center border-b border-white/10 pb-3">
+          <h2 class="text-base font-bold text-white flex items-center gap-2">🎯 Banque de Tâches & Projets</h2>
+          <span class="text-xs text-slate-400">À distribuer dans l'agenda ➔</span>
+        </div>
+
+        <form id="fullTaskForm" class="grid grid-cols-1 md:grid-cols-4 gap-3 bg-black/30 p-3.5 rounded-xl border border-white/10">
           <div class="md:col-span-2">
-            <label class="block text-xs font-semibold text-slate-400 mb-1">Titre de la tâche</label>
-            <input type="text" id="fullTaskTitle" required placeholder="Ex: Devoir de Mathématiques" class="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none">
+            <input type="text" id="fullTaskTitle" required placeholder="Nom du devoir, révision ou projet..." class="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
           </div>
           <div>
-            <label class="block text-xs font-semibold text-slate-400 mb-1">Durée</label>
-            <select id="fullTaskDuration" class="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-xs text-white">
+            <select id="fullTaskDuration" class="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none">
               <option value="15">15 min</option>
               <option value="30">30 min</option>
               <option value="45">45 min</option>
@@ -149,75 +101,49 @@
             </select>
           </div>
           <div>
-            <label class="block text-xs font-semibold text-slate-400 mb-1">Priorité</label>
-            <select id="fullTaskPriority" class="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-xs text-white">
-              <option value="haute">🔥 Haute</option>
-              <option value="moyenne" selected>⚡ Moyenne</option>
-              <option value="basse">🌱 Basse</option>
-            </select>
-          </div>
-          <div class="md:col-span-4 flex justify-end">
-            <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs px-6 py-2 rounded-lg transition">+ Ajouter la tâche</button>
+            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs py-2 rounded-lg transition">+ Ajouter</button>
           </div>
         </form>
 
-        <div id="fullTasksContainer" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+        <div id="fullTasksContainer" class="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[220px] overflow-y-auto pr-1"></div>
       </div>
+
+      <!-- Bloc Notes & Notes Rapides -->
+      <div class="app-card rounded-2xl p-6 space-y-3">
+        <div class="flex justify-between items-center border-b border-white/10 pb-3">
+          <h2 class="text-base font-bold text-white flex items-center gap-2">📝 Bloc-Notes Rapide</h2>
+          <span id="noteSaveStatus" class="text-[10px] text-emerald-400 font-mono">Autosaved ✓</span>
+        </div>
+        <textarea id="quickNotesArea" placeholder="Prends tes notes rapides, idées de révision ou rappels ici..." class="w-full h-40 bg-black/30 border border-white/10 rounded-xl p-3.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 resize-none leading-relaxed"></textarea>
+      </div>
+
     </section>
 
-    <!-- VOLET 3 : NOTES -->
-    <section id="viewNotes" class="hidden space-y-6">
-      <div class="app-card rounded-2xl p-6">
-        <h2 class="text-base font-bold text-white mb-2">📝 Bloc-Notes</h2>
-        <textarea id="quickNotesArea" placeholder="Écris tes notes ici..." class="w-full h-64 bg-black/40 border border-white/10 rounded-xl p-4 text-xs text-slate-200 focus:outline-none resize-none"></textarea>
-      </div>
-    </section>
-
-    <!-- VOLET 4 : SETTINGS / PRONOTE / RGB -->
-    <section id="viewSettings" class="hidden space-y-6">
-      <div class="app-card rounded-2xl p-6 space-y-5 border-sky-500/30">
-        <div class="flex items-center gap-3 border-b border-white/10 pb-4">
-          <div class="p-2.5 rounded-xl bg-sky-500/20 text-sky-400 font-bold text-xl border border-sky-500/30">🎓</div>
+    <!-- ZONE DROITE (1/3) : EMPLOI DU TEMPS TYPE GOOGLE CALENDAR / PRONOTE -->
+    <aside class="lg:col-span-4 space-y-4">
+      <div class="app-card rounded-2xl p-5 space-y-4 sticky top-20">
+        
+        <div class="flex justify-between items-center pb-3 border-b border-white/10">
           <div>
-            <h3 class="text-base font-bold text-white">Synchronisation Pronote</h3>
-            <p class="text-xs text-slate-400">Importe tes cours automatiquement via fichier agenda (.ics)</p>
+            <h2 class="text-base font-bold text-white flex items-center gap-2">📆 Emploi du Temps</h2>
+            <p id="dayLabel" class="text-xs text-slate-400 font-medium mt-0.5">Aujourd'hui</p>
           </div>
+          <button id="addFixedScheduleBtn" class="bg-white/10 hover:bg-white/20 text-xs text-sky-300 px-3 py-1.5 rounded-lg border border-white/10 transition">+ Horaire</button>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <!-- Import ICS -->
-          <div class="bg-black/40 border border-white/10 p-4 rounded-xl space-y-3">
-            <h4 class="text-xs font-bold text-sky-300 flex items-center gap-2"><span>📅</span> Import Fichier iCal / Agenda (.ics)</h4>
-            <p class="text-[11px] text-slate-400">Télécharge ton fichier <code>.ics</code> depuis Pronote et sélectionne-le :</p>
-            <input type="file" id="icsFileInput" accept=".ics" class="w-full text-xs text-slate-400 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-sky-600/20 file:text-sky-300 hover:file:bg-sky-600/30">
-          </div>
+        <!-- Grille Style Timeline Google Calendar / Pronote -->
+        <div id="timelineGrid" class="space-y-2 max-h-[calc(100vh-220px)] overflow-y-auto pr-1"></div>
 
-          <!-- Import Texte -->
-          <div class="bg-black/40 border border-white/10 p-4 rounded-xl space-y-3">
-            <h4 class="text-xs font-bold text-sky-300 flex items-center gap-2"><span>📋</span> Copier-Coller Texte Pronote</h4>
-            <textarea id="pronoteRawImport" placeholder="Ex: 08h00 - 09h00 : MATHS" class="w-full h-16 bg-black/50 border border-white/10 rounded-lg p-2 text-xs text-white focus:outline-none resize-none"></textarea>
-            <button id="importPronoteTextBtn" class="w-full bg-sky-600 hover:bg-sky-500 text-white font-medium text-xs py-1.5 rounded-lg transition">Importer le texte</button>
-          </div>
+        <div class="pt-2 border-t border-white/10 flex justify-between items-center">
+          <button id="clearTimelineBtn" class="text-[11px] text-rose-400 hover:underline">Effacer le jour</button>
+          <button id="openPronoteSyncBtn" class="text-[11px] text-sky-400 hover:underline flex items-center gap-1">🔄 Synchro Pronote</button>
         </div>
+
       </div>
-
-      <div class="app-card rounded-2xl p-6 space-y-5">
-        <h3 class="text-sm font-bold text-white">🎨 Régulateur de Style RGB</h3>
-        <div class="flex justify-between items-center">
-          <label class="text-xs font-medium text-slate-300">Couleur de fond :</label>
-          <input type="color" id="bgColorPicker" value="#131722" class="h-8 w-14 rounded cursor-pointer bg-transparent border-0">
-        </div>
-        <div class="grid grid-cols-4 gap-2 pt-2">
-          <button class="preset-bg-btn p-2 rounded-lg text-[10px] font-mono border border-white/10 bg-[#131722]" data-bg="#131722">Sombre</button>
-          <button class="preset-bg-btn p-2 rounded-lg text-[10px] font-mono border border-white/10 bg-[#0f172a]" data-bg="#0f172a">Navy</button>
-          <button class="preset-bg-btn p-2 rounded-lg text-[10px] font-mono border border-white/10 bg-[#18181b]" data-bg="#18181b">Graphite</button>
-          <button class="preset-bg-btn p-2 rounded-lg text-[10px] font-mono border border-white/10 bg-[#022c22]" data-bg="#022c22">Émeraude</button>
-        </div>
-      </div>
-    </section>
+    </aside>
 
   </main>
 
-  <script src="./app.js?v=3"></script>
+  <script src="./app.js?v=4"></script>
 </body>
 </html>
