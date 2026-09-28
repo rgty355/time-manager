@@ -1,6 +1,6 @@
 "use strict";
 
-const STORAGE_KEY = "timemanager_data_v5";
+const STORAGE_KEY = "timemanager_data_v6";
 
 let appData = {
   pendingTasks: [],
@@ -170,6 +170,156 @@ window.deleteScheduleItem = function(id) {
 };
 
 /* =========================
+   MODULE PRONOTE (ICS & TEXTE)
+   ========================= */
+
+function setupPronoteModule() {
+  const modal = document.getElementById("pronoteModal");
+  const openBtn = document.getElementById("openPronoteModalBtn");
+  const openBtn2 = document.getElementById("openPronoteSyncBtn2");
+  const closeBtn = document.getElementById("closePronoteModalBtn");
+
+  const openModal = () => modal?.classList.remove("hidden");
+  const closeModal = () => modal?.classList.add("hidden");
+
+  openBtn?.addEventListener("click", openModal);
+  openBtn2?.addEventListener("click", openModal);
+  closeBtn?.addEventListener("click", closeModal);
+
+  // Import fichier .ics
+  document.getElementById("icsFileInput")?.addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      parseAndSaveICS(event.target.result);
+      closeModal();
+    };
+    reader.readAsText(file);
+  });
+
+  // Import texte brut
+  document.getElementById("importPronoteTextBtn")?.addEventListener("click", () => {
+    const txt = document.getElementById("pronoteRawImport")?.value;
+    if (!txt?.trim()) return;
+
+    const count = parsePronoteText(txt);
+    if (count > 0) {
+      alert(`✨ ${count} cours ajouté(s) pour la journée !`);
+      document.getElementById("pronoteRawImport").value = "";
+      closeModal();
+      renderSchedule();
+    } else {
+      alert("Aucun cours reconnu. Exemple : '08h00 - 09h00 : MATHS'");
+    }
+  });
+}
+
+function parsePronoteText(text) {
+  const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  let count = 0;
+
+  for (const line of lines) {
+    const match = line.match(/(\d{1,2})[h:](\d{2})?\s*[-–]\s*(\d{1,2})[h:](\d{2})?\s*:?\s*(.+)/i);
+    if (!match) continue;
+
+    const startH = Number(match[1]);
+    const startM = Number(match[2] || 0);
+    const endH = Number(match[3]);
+    const endM = Number(match[4] || 0);
+    const rawTitle = match[5].trim();
+
+    // Si prof absent ou cours annulé
+    if (/prof\s+absent|cours\s+annul[ée]/i.test(rawTitle)) continue;
+
+    const startTime = `${String(startH).padStart(2, "0")}:${String(startM).padStart(2, "0")}`;
+    const endTime = `${String(endH).padStart(2, "0")}:${String(endM).padStart(2, "0")}`;
+
+    getSchedule().push({
+      id: uid(),
+      title: rawTitle.replace(/\(prof absent\)/gi, "").trim(),
+      start: startTime,
+      end: endTime,
+      type: "fixed"
+    });
+
+    count++;
+  }
+
+  saveData();
+  return count;
+}
+
+function parseAndSaveICS(icsData) {
+  const lines = icsData.split(/\r?\n/);
+  let count = 0;
+  let currentEvent = null;
+
+  lines.forEach((line) => {
+    line = line.trim();
+
+    if (line === "BEGIN:VEVENT") {
+      currentEvent = {};
+    } else if (line === "END:VEVENT" && currentEvent) {
+      if (currentEvent.summary && currentEvent.dtstart && currentEvent.dtend) {
+        const dateStr = formatDateFromICS(currentEvent.dtstart);
+        const startTime = formatTimeFromICS(currentEvent.dtstart);
+        const endTime = formatTimeFromICS(currentEvent.dtend);
+
+        if (dateStr && startTime && endTime) {
+          if (!appData.schedules[dateStr]) {
+            appData.schedules[dateStr] = [];
+          }
+
+          const exists = appData.schedules[dateStr].some(
+            (item) => item.start === startTime && item.title === currentEvent.summary
+          );
+
+          if (!exists) {
+            appData.schedules[dateStr].push({
+              id: uid(),
+              title: currentEvent.summary.replace(/\\/g, ""),
+              start: startTime,
+              end: endTime,
+              type: "fixed"
+            });
+            count++;
+          }
+        }
+      }
+      currentEvent = null;
+    } else if (currentEvent) {
+      if (line.startsWith("SUMMARY:")) {
+        currentEvent.summary = line.replace("SUMMARY:", "");
+      } else if (line.startsWith("DTSTART")) {
+        currentEvent.dtstart = line.split(":")[1];
+      } else if (line.startsWith("DTEND")) {
+        currentEvent.dtend = line.split(":")[1];
+      }
+    }
+  });
+
+  saveData();
+  renderSchedule();
+  alert(`✨ ${count} cours Pronote importés avec succès !`);
+}
+
+function formatDateFromICS(icsStr) {
+  if (!icsStr || icsStr.length < 8) return null;
+  const y = icsStr.substring(0, 4);
+  const m = icsStr.substring(4, 6);
+  const d = icsStr.substring(6, 8);
+  return `${y}-${m}-${d}`;
+}
+
+function formatTimeFromICS(icsStr) {
+  if (!icsStr || !icsStr.includes("T")) return null;
+  const timePart = icsStr.split("T")[1];
+  return `${timePart.substring(0, 2)}:${timePart.substring(2, 4)}`;
+}
+
+/* =========================
    BANQUE DE TÂCHES (GAUCHE 2/3)
    ========================= */
 
@@ -220,7 +370,7 @@ window.deleteTask = function(taskId) {
 };
 
 /* =========================
-   CHECKLIST FLASH
+   CHECKLIST FLASH & UTILITAIRES
    ========================= */
 
 function renderQuickChecklist() {
@@ -262,10 +412,6 @@ window.deleteCheck = function(id) {
   saveData();
   renderQuickChecklist();
 };
-
-/* =========================
-   UTILITAIRES ET NOTES
-   ========================= */
 
 function updateDateLabel() {
   const label = document.getElementById("dayLabel");
@@ -383,6 +529,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  setupPronoteModule();
   setupNotes();
   renderSchedule();
   renderFullTasks();
